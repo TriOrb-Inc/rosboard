@@ -222,6 +222,21 @@ class Subscriber(object):
         self.type = _ros2_type_to_type_name(topic_type)
         self.callback = callback
         self.callback_args = callback_args
+        if isinstance(qos, int):
+            qos = rclpy.qos.QoSProfile(
+                                       depth = qos,
+                                       reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT,
+                                       history=rclpy.qos.HistoryPolicy.KEEP_LAST
+                                       )
+        elif isinstance(qos, rclpy.qos.QoSProfile):
+            # Unknown QoS history policyが発生するのでとり暫定対策
+            qos = rclpy.qos.QoSProfile(
+                                       depth = qos.depth,
+                                       reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT,
+                                       history=rclpy.qos.HistoryPolicy.KEEP_LAST
+                                       )
+        else:
+            print(type(qos))
         self._sub = _node.create_subscription(topic_type, topic_name, self._ros2_callback, qos, event_callbacks = rclpy.qos_event.SubscriptionEventCallbacks())
         _node.guards
         self.get_num_connections = lambda: 1 # No good ROS2 equivalent
